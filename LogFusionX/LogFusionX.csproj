@@ -1,12 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>netstandard2.1</TargetFramework>
+		<Nullable>enable</Nullable>
+		<PackageId>LogFusionX</PackageId>
+		<Version>0.0.1</Version>
+		<Authors>Gaurav Thakur</Authors>
+		<Description>A powerful logging library for handling different log levels, formats, and scenarios.</Description>
+		<PackageTags>logging;logger;error;fatal;debug;info;.net;.netLogger;loggingFramework</PackageTags>
+		<RepositoryUrl>https://github.com/goldi0002/LogFusionX</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/goldi0002/LogFusionX</PackageProjectUrl>
+		<PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>
+		<PackageIconUrl>https://github.com/goldi0002/LogFusionX/raw/main/Resources/icon.png</PackageIconUrl>
+		<PackageReleaseNotes>Initial release of LogFusionX package for enhanced logging functionality.</PackageReleaseNotes>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="Core\Services\" />
-    <Folder Include="Tests\" />
-    <Folder Include="Resources\" />
-  </ItemGroup>
+	<!-- Item group for folders or additional content included in the project -->
+	<ItemGroup>
+		<Folder Include="Core\Services\" />
+		<Folder Include="Tests\" />
+	</ItemGroup>
+	<ItemGroup>
+		<AssemblyAttribute Include="Company" Value="LogFusionX" />
+		<AssemblyAttribute Include="Product" Value="LogFusionX Logging Library" />
+		<AssemblyAttribute Include="Copyright" Value="© 2024 Gaurav Thakur" />
+	</ItemGroup>
 </Project>
