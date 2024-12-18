@@ -96,7 +96,7 @@ If an exception occurs during logging, it is caught and logged using `LogError`.
 LogFusionX allows synchronous logging, ensuring that messages are written in the correct sequence.
 
 ## License
-This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE.txt) file for details.
 
 ## Contributing
 Feel free to fork the repository, submit issues, or make pull requests to contribute to the development of LogFusionX.
