@@ -3,7 +3,7 @@
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<Nullable>enable</Nullable>
 		<PackageId>LogFusionX</PackageId>
-		<Version>0.1.0</Version>
+		<Version>0.1.1</Version>
 		<Authors>Gaurav Thakur</Authors>
 		<Description>A powerful logging library for handling different log levels, formats, and scenarios.</Description>
 		<PackageTags>logging;logger;error;fatal;debug;info;.net;.netLogger;loggingFramework</PackageTags>
@@ -15,7 +15,7 @@
 		<Company>LogFusionX</Company>
 		<Product>LogFusionX Logging Library</Product>
 		<Copyright>© 2024 Gaurav Thakur</Copyright>
-		<ProductVersion>0.1.0</ProductVersion>
+		<ProductVersion>0.1.1</ProductVersion>
 		<RepositoryType>git</RepositoryType>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
@@ -25,7 +25,7 @@
 		<Folder Include="Resources\" />
 	</ItemGroup>
 	<ItemGroup>
-		<None Include="Resources\README.md">
+		<None Include="..\README.md">
 			<Pack>True</Pack>
 			<PackagePath>\</PackagePath>
 		</None>
