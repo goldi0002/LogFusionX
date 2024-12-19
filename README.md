@@ -81,7 +81,7 @@ class Program
 ## Explanation:
 
 ### Logger Configuration
-The `LogFusionXConfigurationOptions` class is used to configure the logger in LogFusionX. Key properties include:
+The `XFileLoggerConfigurationOptions` class is used to configure the logger in LogFusionX. Key properties include:
 - **LogDirectory**: Specifies the directory where log files will be stored.
 - **LogFileName**: Allows you to set a custom name for the log file. Default names can follow a date-based pattern for easy organization.
 - **EnableConsoleLogging**: Enables or disables logging to the console for debugging or local development.
@@ -89,7 +89,7 @@ The `LogFusionXConfigurationOptions` class is used to configure the logger in Lo
 
 Example configuration:
 ```csharp
-var config = new LogFusionXConfigurationOptions
+var config = new XFileLoggerConfigurationOptions
 {
     LogDirectory = "C:\\Logs",
     LogFileName = "AppLogs.log",
