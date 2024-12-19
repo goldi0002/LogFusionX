@@ -20,6 +20,7 @@ namespace LogFusionX.Core.Loggers
         private readonly XFileLogger? _fileLogger;
         private readonly XDBLoggerWriter? _dbLoggerWriter;
         private readonly XLoggerHelper _loggerHelper;
+        private readonly XLoggerFormats xLoggerLoggingFormat = XLoggerFormats.SimplLogFormat;
 
         /// <summary>
         /// Optional custom log handler for extending logging functionality.
@@ -34,7 +35,7 @@ namespace LogFusionX.Core.Loggers
         public FusionXLogger(string filePath, string fileName)
         {
             _isFileLoggingEnabled = true;
-            _fileLogger = new XFileLogger(filePath, fileName);
+            _fileLogger = new XFileLogger(GetFileLoggerConfigurationOptions(filePath, fileName));
             _loggerHelper = new XLoggerHelper();
         }
 
@@ -66,7 +67,7 @@ namespace LogFusionX.Core.Loggers
         {
             _isFileLoggingEnabled = true;
             _isDbLoggingEnabled = true;
-            _fileLogger = new XFileLogger(filePath, fileName);
+            _fileLogger = new XFileLogger(GetFileLoggerConfigurationOptions(filePath, fileName));
             _dbLoggerWriter = new XDBLoggerWriter(sqlServerConnectionString, tableName);
             _loggerHelper = new XLoggerHelper();
         }
@@ -75,11 +76,20 @@ namespace LogFusionX.Core.Loggers
             _isFileLoggingEnabled = true;
             _fileLogger = new XFileLogger(xFileLoggerConfigurationOptions);
             _loggerHelper = new XLoggerHelper();
+            xLoggerLoggingFormat = xFileLoggerConfigurationOptions.xLoggerFormat;
         }
         #endregion
 
         #region Public Logging Methods
-
+        private XFileLoggerConfigurationOptions GetFileLoggerConfigurationOptions(string filePath, string fileName)
+        {
+            return new XFileLoggerConfigurationOptions()
+            {
+                LogFileName = fileName,
+                LogDirectory = filePath,
+                xLoggerFormat = XLoggerFormats.SimplLogFormat
+            };
+        }
         /// <summary>
         /// Logs a message.
         /// </summary>
@@ -121,7 +131,7 @@ namespace LogFusionX.Core.Loggers
         {
             if (_isFileLoggingEnabled)
             {
-                _fileLogger?.Log(message, exception, level);
+                _fileLogger?.Log(message, exception, level, xLoggerLoggingFormat);
             }
 
             if (_isDbLoggingEnabled)

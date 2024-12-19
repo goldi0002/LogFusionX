@@ -22,11 +22,11 @@ namespace LogFusionX.Core.Loggers
             _writer = new XFileLoggerWriterAdvanced(_xLogFilePath, _fileName, MaxFileSizeInMB);
             xLoggerFormat = new XLoggerFormat(null);
         }
-        public XLogger(string _xFilePath, string _fileName, int MaxFileSizeInMB, XFileLoggerConfigurationOptions xFileLoggerConfigurationOptions)
+        public XLogger(XFileLoggerConfigurationOptions xFileLoggerConfigurationOptions)
         {
-            if (string.IsNullOrWhiteSpace(_xFilePath)) throw new ArgumentNullException(nameof(_xFilePath));
-            _xLogFilePath = _xFilePath;
-            _writer = new XFileLoggerWriterAdvanced(_xLogFilePath, _fileName, MaxFileSizeInMB);
+            if (string.IsNullOrWhiteSpace(xFileLoggerConfigurationOptions.LogDirectory)) throw new ArgumentNullException(nameof(xFileLoggerConfigurationOptions.LogDirectory));
+            _xLogFilePath = xFileLoggerConfigurationOptions.LogDirectory;
+            _writer = new XFileLoggerWriterAdvanced(xFileLoggerConfigurationOptions);
             xLoggerFormat = new XLoggerFormat(xFileLoggerConfigurationOptions.DateFormat);
         }
         #region "Private Members"
@@ -49,50 +49,50 @@ namespace LogFusionX.Core.Loggers
             _writer.WriteLog(message);
         }
 
-        public override void Log(string message, Exception? exception, FusionXLoggerLevel fusionXLoggerLevel)
+        public override void Log(string message, Exception? exception, FusionXLoggerLevel fusionXLoggerLevel, XLoggerFormats xLogFormat)
         {
             if (exception != null)
-                commonWriter(message, exception, fusionXLoggerLevel);
+                commonWriter(message, exception, fusionXLoggerLevel, xLogFormat);
             else
-                Log(xLoggerFormat.GetLogFormat(FusionXLoggerLevel.None, message, null, GetCurrentMethodFullName()));
+                Log(xLoggerFormat.GetLogFormat(FusionXLoggerLevel.None, message, null, GetCurrentMethodFullName(), xLogFormat));
         }
-        private void commonWriter(string message, Exception? exception, FusionXLoggerLevel fusionXLoggerLevel)
+        private void commonWriter(string message, Exception? exception, FusionXLoggerLevel fusionXLoggerLevel, XLoggerFormats xLogFormat)
         {
-            _writer.WriteLog(xLoggerFormat.GetLogFormat(fusionXLoggerLevel, message, exception, GetCurrentMethodFullName()));
+            _writer.WriteLog(xLoggerFormat.GetLogFormat(fusionXLoggerLevel, message, exception, GetCurrentMethodFullName(), xLogFormat));
         }
-        public override void LogCritical(string message, Exception? exception, FusionXLoggerLevel fusionXLoggerLevel)
+        public override void LogCritical(string message, Exception? exception, FusionXLoggerLevel fusionXLoggerLevel, XLoggerFormats xLogFormat)
         {
-            commonWriter(message, exception, fusionXLoggerLevel);
+            commonWriter(message, exception, fusionXLoggerLevel, xLogFormat);
         }
 
-        public override void LogWarning(string message, Exception? exception, FusionXLoggerLevel fusionXLoggerLevel)
+        public override void LogWarning(string message, Exception? exception, FusionXLoggerLevel fusionXLoggerLevel, XLoggerFormats xLogFormat)
         {
-            commonWriter(message, exception, fusionXLoggerLevel);
+            commonWriter(message, exception, fusionXLoggerLevel, xLogFormat);
         }
 
-        public override void LogInfo(string message, Exception? exception, FusionXLoggerLevel fusionXLoggerLevel)
+        public override void LogInfo(string message, Exception? exception, FusionXLoggerLevel fusionXLoggerLevel, XLoggerFormats xLogFormat)
         {
-            commonWriter(message, exception, fusionXLoggerLevel);
+            commonWriter(message, exception, fusionXLoggerLevel, xLogFormat);
         }
 
-        public override void LogDebug(string message, Exception? exception, FusionXLoggerLevel fusionXLoggerLevel)
+        public override void LogDebug(string message, Exception? exception, FusionXLoggerLevel fusionXLoggerLevel, XLoggerFormats xLogFormat)
         {
-            commonWriter(message, exception, fusionXLoggerLevel);
+            commonWriter(message, exception, fusionXLoggerLevel, xLogFormat);
         }
 
-        public override void LogPerformance(string taskName, TimeSpan timeTaken, FusionXLoggerLevel fusionXLoggerLevel)
+        public override void LogPerformance(string taskName, TimeSpan timeTaken, FusionXLoggerLevel fusionXLoggerLevel, XLoggerFormats xLogFormat)
         {
             throw new NotImplementedException();
         }
 
-        public override void LogWithTag(string tag, string message, FusionXLoggerLevel fusionXLoggerLevel)
+        public override void LogWithTag(string tag, string message, FusionXLoggerLevel fusionXLoggerLevel, XLoggerFormats xLogFormat)
         {
             throw new NotImplementedException();
         }
 
-        public override void LogError(string message, Exception exception, FusionXLoggerLevel fusionXLoggerLevel)
+        public override void LogError(string message, Exception exception, FusionXLoggerLevel fusionXLoggerLevel, XLoggerFormats xLogFormat)
         {
-            commonWriter(message, exception, fusionXLoggerLevel);
+            commonWriter(message, exception, fusionXLoggerLevel, xLogFormat);
         }
 
         public override void LogStructuredData(string message, Dictionary<string, string> data, FusionXLoggerLevel fusionXLoggerLevel)

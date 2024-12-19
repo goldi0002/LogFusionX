@@ -35,15 +35,17 @@ namespace LogFusionX.Core.Configurations
         /// Enable or disable thread-safe logging.
         /// </summary>
         public bool EnableThreadSafety { get; set; } = true;
-        /// <summary>
-        /// The log message format (e.g., "{Timestamp} [{Level}] {Message}").
-        /// </summary>
-        public string LogFormat { get; set; } = "{Timestamp} [{Level}] {Message}";
 
         /// <summary>
         /// Date format used in log files.
         /// </summary>
         public string DateFormat { get; set; } = "yyyy-MM-dd HH:mm:ss.fff";
+        /// <summary>
+        /// enum to set the format of log there are different differnt log formats
+        /// </summary>
+        public XLoggerFormats xLoggerFormat { get; set; }
+        public XLoggerFolderFormat xLoggerFolderFormat { get; set; }
+        public string xLoggerFolderDateFormat { get; set; } = "yyyy-MM-dd";
 
         public XFileLoggerConfigurationOptions()
         {
