@@ -5,8 +5,6 @@ LogFusionX is a powerful logging library designed to handle different log levels
 
 ### Features of LogFusionX
 - **Structured Logging**: Supports JSON formatting for structured log data.
-- **Real-Time Monitoring**: Streams logs via WebSocket to connected clients for instant updates.
-- **Performance Monitoring**: Tracks and logs performance metrics.
 - **Security Focus**: Highlights suspicious or unauthorized actions in the system.
 - **Customizability**: Allows defining custom log levels and extending functionality.
 
