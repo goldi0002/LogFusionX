@@ -5,8 +5,6 @@ LogFusionX is a powerful logging library designed to handle different log levels
 
 ### Features of LogFusionX
 - **Structured Logging**: Supports JSON formatting for structured log data.
-- **Real-Time Monitoring**: Streams logs via WebSocket to connected clients for instant updates.
-- **Performance Monitoring**: Tracks and logs performance metrics.
 - **Security Focus**: Highlights suspicious or unauthorized actions in the system.
 - **Customizability**: Allows defining custom log levels and extending functionality.
 
@@ -14,7 +12,7 @@ LogFusionX is a powerful logging library designed to handle different log levels
 
 To install `LogFusionX`, use the following command:
 ```bash
-dotnet add package LogFusionX --version 0.1.0
+dotnet add package LogFusionX --version 0.1.1
 ````
 This will add the latest version of `LogFusionX` to your project.
 
@@ -91,7 +89,7 @@ The `XFileLoggerConfigurationOptions` class is used to configure the logger in L
 
 Example configuration:
 ```csharp
-var config = new LogFusionXConfigurationOptions
+var config = new XFileLoggerConfigurationOptions
 {
     LogDirectory = "C:\\Logs",
     LogFileName = "AppLogs.log",
