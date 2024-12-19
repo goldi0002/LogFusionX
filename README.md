@@ -2,12 +2,13 @@
 
 LogFusionX is a powerful logging library designed to handle different log levels, formats, and logging scenarios. It provides synchronous logging capabilities, including the ability to log to files, handle exceptions, and log warning and error messages in a straightforward manner.
 
-## Features
 
-- **Multiple Log Levels**: Support for `Info`, `Warning`, `Error`, and custom log levels.
-- **File Logging**: Logs can be written to files with flexible file and directory options.
-- **Exception Handling**: Log errors with detailed exception stack traces.
-- **Synchronous Logging**: Log entries are written synchronously, ensuring that messages are recorded in the correct order.
+### Features of LogFusionX
+- **Structured Logging**: Supports JSON formatting for structured log data.
+- **Real-Time Monitoring**: Streams logs via WebSocket to connected clients for instant updates.
+- **Performance Monitoring**: Tracks and logs performance metrics.
+- **Security Focus**: Highlights suspicious or unauthorized actions in the system.
+- **Customizability**: Allows defining custom log levels and extending functionality.
 
 ## Installation
 
@@ -82,13 +83,95 @@ class Program
 ## Explanation:
 
 ### Logger Configuration
-The `XFileLoggerConfigurationOptions` class is used to configure the logger. You can set the log file directory (`LogDirectory`) and the log file name (`LogFileName`).
+The `XFileLoggerConfigurationOptions` class is used to configure the logger in LogFusionX. Key properties include:
+- **LogDirectory**: Specifies the directory where log files will be stored.
+- **LogFileName**: Allows you to set a custom name for the log file. Default names can follow a date-based pattern for easy organization.
+- **EnableConsoleLogging**: Enables or disables logging to the console for debugging or local development.
+- **MaxLogFileSize**: Defines the maximum size of a log file before it rolls over to a new file.
 
-### Logging Levels:
-- **Info**: Logs general information.
-- **Warning**: Logs warning messages.
-- **Error**: Logs error messages along with exception details.
+Example configuration:
+```csharp
+var config = new LogFusionXConfigurationOptions
+{
+    LogDirectory = "C:\\Logs",
+    LogFileName = "AppLogs.log",
+    EnableConsoleLogging = true,
+    MaxLogFileSize = 5 * 1024 * 1024 // 5 MB
+};
+```
+---
+## Logging Levels in LogFusionX
 
+LogFusionX supports a wide range of logging levels to handle different types of application scenarios effectively:
+
+### **1. Info**
+Logs general information, such as application startup, process completion, or routine activities.
+
+Example:
+```plaintext
+"Application started successfully at 12:30 PM"
+```
+
+### **2. Warning**
+Logs potential issues or unexpected behavior that does not stop the application but needs attention.
+
+Example:
+```plaintext
+"Memory usage exceeded 80%, consider optimizing"
+```
+
+### **3. Error**
+Logs application errors, such as unhandled exceptions or invalid operations. Includes details about the exception (e.g., stack trace).
+
+Example:
+```plaintext
+"Database connection failed: TimeoutException at ..."
+```
+
+### **4. Trace**
+Logs detailed, step-by-step execution for debugging purposes, useful during development or troubleshooting.
+
+Example:
+```plaintext
+"Entering method ProcessOrder at 12:31:05 PM"
+```
+
+### **5. Fatal**
+Logs critical failures that cause the application to crash or become unusable. Typically used for catastrophic events.
+
+Example:
+```plaintext
+"System crash: OutOfMemoryException - shutting down"
+```
+
+### **6. Performance**
+Logs performance-related metrics to monitor response times or identify bottlenecks in the application.
+
+Example:
+```plaintext
+"API response time: 350ms for /getOrderDetails"
+```
+
+### **7. Security**
+Logs security-related events, such as failed authentication attempts, unauthorized access, or policy violations.
+
+Example:
+```plaintext
+"Unauthorized access attempt detected: IP 192.168.1.101"
+```
+
+### **8. Custom (Extendable)**
+LogFusionX allows defining custom log levels tailored to specific organizational needs. Examples include:
+
+- **Audit**: Tracks user actions or data modifications for compliance.
+- **Critical**: Highlights issues that may not crash the application but need immediate attention.
+
+Example:
+```plaintext
+"User JohnDoe updated record #1234 at 2:15 PM."
+```
+
+---
 ### Exception Handling
 If an exception occurs during logging, it is caught and logged using `LogError`.
 
