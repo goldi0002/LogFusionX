@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LogFusionX.Core.Configurations;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -8,11 +9,12 @@ using System.Threading.Tasks;
 
 namespace LogFusionX.FileWriter
 {
-    internal class XFileLoggerWriterAdvanced : IDisposable
+    internal class XFileLoggerWriterAdvanced : XFileLoggerHelper, IDisposable
     {
         private readonly string _logDirectory;
         private readonly string _baseFileName;
         private readonly int _maxFileSizeInBytes;
+        private readonly string _dateFormat = "yyyy-MM-dd";
         private int _fileIndex = 0;
         private bool _disposed = false;
 
@@ -24,8 +26,9 @@ namespace LogFusionX.FileWriter
         private FileStream _fileStream = null!;
 
         private readonly object _syncLock = new object();
+        private readonly XLoggerFolderFormat _xLoggerFolderFormat = XLoggerFolderFormat.SimplLogFolderFormat;
 
-        public XFileLoggerWriterAdvanced(string logDirectory, string baseFileName, int maxFileSizeInMB = 10)
+        public XFileLoggerWriterAdvanced(string logDirectory, string baseFileName, int maxFileSizeInMB = 10, XLoggerFolderFormat xLoggerFolderFormat = default)
         {
             if (string.IsNullOrWhiteSpace(logDirectory)) throw new ArgumentNullException(nameof(logDirectory));
             if (string.IsNullOrWhiteSpace(baseFileName)) throw new ArgumentNullException(nameof(baseFileName));
@@ -37,24 +40,48 @@ namespace LogFusionX.FileWriter
             _cancellationTokenSource = new CancellationTokenSource();
             _writerTask = Task.Run(ProcessLogQueueAsync);
             InitializeWriter();
+            _xLoggerFolderFormat = xLoggerFolderFormat;
         }
-
+        public XFileLoggerWriterAdvanced(XFileLoggerConfigurationOptions xFileLoggerConfigurationOptions)
+        {
+            _logDirectory = xFileLoggerConfigurationOptions.LogDirectory;
+            _baseFileName = xFileLoggerConfigurationOptions.LogFileName;
+            _maxFileSizeInBytes = xFileLoggerConfigurationOptions.MaxFileSizeInMB * 1024 * 1024;
+            _dateFormat = xFileLoggerConfigurationOptions.xLoggerFolderDateFormat;
+            _xLoggerFolderFormat = xFileLoggerConfigurationOptions.xLoggerFolderFormat;
+            Directory.CreateDirectory(_logDirectory);
+            _logQueue = new BlockingCollection<string>(boundedCapacity: 10_000);
+            _cancellationTokenSource = new CancellationTokenSource();
+            _writerTask = Task.Run(ProcessLogQueueAsync);
+            InitializeWriter();
+        }
         private void InitializeWriter()
         {
             lock (_syncLock)
             {
                 _streamWriter?.Dispose();
                 _fileStream?.Dispose();
-                string filePath = GetNextLogFilePath();
-                _fileStream = new FileStream(filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 8192, useAsync: true);
-                _streamWriter = new StreamWriter(_fileStream, Encoding.UTF8) { AutoFlush = false };
+                if (_xLoggerFolderFormat == XLoggerFolderFormat.StandardLogFolderFormat)
+                {
+                    string dateFolder = DateTime.Now.ToString(_dateFormat);
+                    string folderPath = Path.Combine(_logDirectory, dateFolder);
+                    Directory.CreateDirectory(folderPath); //create folder for today if not exists
+                    string filePath = GetNextLogFilePath(folderPath);
+                    _fileStream = new FileStream(filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 8192, useAsync: true);
+                    _streamWriter = new StreamWriter(_fileStream, Encoding.UTF8) { AutoFlush = false };
+                }
+                else
+                {
+                    string filePath = GetNextLogFilePath(_logDirectory);
+                    _fileStream = new FileStream(filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 8192, useAsync: true);
+                    _streamWriter = new StreamWriter(_fileStream, Encoding.UTF8) { AutoFlush = false };
+                }
             }
         }
-
-        private string GetNextLogFilePath()
+        private string GetNextLogFilePath(string folderPath)
         {
             _fileIndex++;
-            return Path.Combine(_logDirectory, $"{_baseFileName}_{_fileIndex:00000}.log");
+            return Path.Combine(folderPath, $"{_baseFileName}_{_fileIndex:00000}.log");
         }
 
         /// <summary>

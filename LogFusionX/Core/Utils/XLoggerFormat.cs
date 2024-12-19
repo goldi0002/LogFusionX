@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LogFusionX.Core.Configurations;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -17,36 +18,53 @@ namespace LogFusionX.Core.Utils
                 _logTimeStampFormat = logTimeStampFormat;
             }
         }
-        public string GetLogFormat(FusionXLoggerLevel xLoggerLevel, string message, Exception? exception, string? MethodName)
+        public string GetLogFormat(FusionXLoggerLevel xLoggerLevel, string message, Exception? exception, string? MethodName, XLoggerFormats xLoggerFormats)
         {
-            if (xLoggerLevel == FusionXLoggerLevel.Error)
+            if (xLoggerFormats == XLoggerFormats.SimplLogFormat)
             {
-                return GetErrorLog(message, GetDateTimeWithFormat(), xLoggerLevel, MethodName, FormatException(exception));
-            }
-            else if (xLoggerLevel == FusionXLoggerLevel.Info || xLoggerLevel == FusionXLoggerLevel.None)
-            {
-                xLoggerLevel = FusionXLoggerLevel.Info;
-                return GetInfoLog(message, GetDateTimeWithFormat(), xLoggerLevel, MethodName);
-            }
-            else if (xLoggerLevel == FusionXLoggerLevel.Warn)
-            {
-                return GetWarningLog(message, GetDateTimeWithFormat(), xLoggerLevel, MethodName);
-            }
-            else if (xLoggerLevel == FusionXLoggerLevel.Fatal)
-            {
-                return GetFatalLog(message, GetDateTimeWithFormat(), xLoggerLevel, MethodName, FormatException(exception));
-            }
-            else if (xLoggerLevel == FusionXLoggerLevel.Debug)
-            {
-                return GetDebugLog(message, GetDateTimeWithFormat(), xLoggerLevel, MethodName);
-            }
-            else if (xLoggerLevel == FusionXLoggerLevel.Critical)
-            {
-                return string.Empty;
+                return GetMinimalistLog(message, GetDateTimeWithFormat(), xLoggerLevel, MethodName, Thread.CurrentThread.ManagedThreadId.ToString());
             }
             else
             {
-                return string.Empty;
+
+                if(xLoggerFormats == XLoggerFormats.StandardLogFormat)
+                {
+                    if (xLoggerLevel == FusionXLoggerLevel.Error)
+                    {
+                        return GetErrorLog(message, GetDateTimeWithFormat(), xLoggerLevel, MethodName, FormatException(exception));
+                    }
+                    else if (xLoggerLevel == FusionXLoggerLevel.Info || xLoggerLevel == FusionXLoggerLevel.None)
+                    {
+                        xLoggerLevel = FusionXLoggerLevel.Info;
+                        return GetInfoLog(message, GetDateTimeWithFormat(), xLoggerLevel, MethodName);
+                    }
+                    else if (xLoggerLevel == FusionXLoggerLevel.Warn)
+                    {
+                        return GetWarningLog(message, GetDateTimeWithFormat(), xLoggerLevel, MethodName);
+                    }
+                    else if (xLoggerLevel == FusionXLoggerLevel.Fatal)
+                    {
+                        return GetFatalLog(message, GetDateTimeWithFormat(), xLoggerLevel, MethodName, FormatException(exception));
+                    }
+                    else if (xLoggerLevel == FusionXLoggerLevel.Debug)
+                    {
+                        return GetDebugLog(message, GetDateTimeWithFormat(), xLoggerLevel, MethodName);
+                    }
+                    else if (xLoggerLevel == FusionXLoggerLevel.Critical)
+                    {
+                        return GetCriticalLog(message, GetDateTimeWithFormat(), xLoggerLevel, MethodName, FormatException(exception));
+                    }
+                    else
+                    {
+                        return GetAnsiColoredLog(message, GetDateTimeWithFormat(), xLoggerLevel, MethodName, Thread.CurrentThread.ManagedThreadId.ToString());
+                    }
+                }
+                else
+                {
+                    return GetMinimalistLog(message, GetDateTimeWithFormat(), xLoggerLevel, MethodName, Thread.CurrentThread.ManagedThreadId.ToString());
+
+                }
+               
             }
         }
         private string GetDateTimeWithFormat()
@@ -276,12 +294,26 @@ namespace LogFusionX.Core.Utils
             stringBuilder.AppendLine($"End of {xLoggerLevel} Log Entry").AppendLine(new string('═', 100)); // Bottom border
             return stringBuilder.ToString();
         }
-    }
-    internal enum XLoggerFormats
-    {
-        STND_LOG_FORMAT,
-        STND_ERR_LOG_FORMAT,
-        SIMPL_LOG_FORMAT,
-        ADVNC_LOG_FORMAT
+        /// <summary>
+        /// Formats a critical log entry.
+        /// </summary>
+        protected static string GetCriticalLog(
+            string message,
+            string timestamp,
+            FusionXLoggerLevel xLoggerLevel,
+            string? methodName,
+            string exceptionDetails)
+        {
+            var stringBuilder = new StringBuilder();
+            BuildCommonLog(stringBuilder, timestamp, xLoggerLevel, methodName, message)
+                .AppendLine("**Exception Details (Critical):**")
+                .AppendLine(exceptionDetails)
+                .AppendLine(Get95Lines())
+                .AppendLine($"💥 End of {xLoggerLevel} Log Entry")
+                .AppendLine(Get145LinesHeadFoot()) 
+                .AppendLine();
+
+            return stringBuilder.ToString();
+        }
     }
 }

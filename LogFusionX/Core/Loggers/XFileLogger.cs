@@ -29,7 +29,7 @@ namespace LogFusionX.Core.Loggers
             _XLoggerFileName = fileName;
             _ConfigurationOptions = xFileLoggerConfigurationOptions;
         }
-        public XFileLogger(XFileLoggerConfigurationOptions xFileLoggerConfigurationOptions) : base(xFileLoggerConfigurationOptions.LogDirectory, xFileLoggerConfigurationOptions.LogFileName, xFileLoggerConfigurationOptions.MaxFileSizeInMB, xFileLoggerConfigurationOptions)
+        public XFileLogger(XFileLoggerConfigurationOptions xFileLoggerConfigurationOptions) : base(xFileLoggerConfigurationOptions)
         {
             if (string.IsNullOrEmpty(xFileLoggerConfigurationOptions.LogDirectory)) throw new ArgumentNullException(nameof(xFileLoggerConfigurationOptions.LogDirectory));
             _XLoggerFilePath = xFileLoggerConfigurationOptions.LogDirectory;
