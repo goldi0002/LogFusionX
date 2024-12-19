@@ -12,7 +12,7 @@ LogFusionX is a powerful logging library designed to handle different log levels
 
 To install `LogFusionX`, use the following command:
 ```bash
-dotnet add package LogFusionX --version 0.1.0
+dotnet add package LogFusionX --version 0.1.1
 ````
 This will add the latest version of `LogFusionX` to your project.
 
