@@ -18,9 +18,8 @@ namespace LogFusionX.FileWriter
         private int _fileIndex = 0;
         private bool _disposed = false;
 
-        private readonly BlockingCollection<string> _logQueue;
-        private readonly CancellationTokenSource _cancellationTokenSource;
-        private readonly Task _writerTask;
+        private readonly Queue<string> _logQueue;
+        private readonly object _logQueueLock = new object();
 
         private StreamWriter _streamWriter = null!;
         private FileStream _fileStream = null!;
@@ -36,23 +35,19 @@ namespace LogFusionX.FileWriter
             _baseFileName = baseFileName;
             _maxFileSizeInBytes = maxFileSizeInMB * 1024 * 1024;
             Directory.CreateDirectory(_logDirectory);
-            _logQueue = new BlockingCollection<string>(boundedCapacity: 10_000);
-            _cancellationTokenSource = new CancellationTokenSource();
-            _writerTask = Task.Run(ProcessLogQueueAsync);
+            _logQueue = new Queue<string>();
             InitializeWriter();
             _xLoggerFolderFormat = xLoggerFolderFormat;
         }
-        public XFileLoggerWriterAdvanced(XFileLoggerConfigurationOptions xFileLoggerConfigurationOptions)
+        public XFileLoggerWriterAdvanced(XLoggerConfigurationOptions XLoggerConfigurationOptions)
         {
-            _logDirectory = xFileLoggerConfigurationOptions.LogDirectory;
-            _baseFileName = xFileLoggerConfigurationOptions.LogFileName;
-            _maxFileSizeInBytes = xFileLoggerConfigurationOptions.MaxFileSizeInMB * 1024 * 1024;
-            _dateFormat = xFileLoggerConfigurationOptions.xLoggerFolderDateFormat;
-            _xLoggerFolderFormat = xFileLoggerConfigurationOptions.xLoggerFolderFormat;
+            _logDirectory = XLoggerConfigurationOptions.LogDirectory;
+            _baseFileName = XLoggerConfigurationOptions.LogFileName;
+            _maxFileSizeInBytes = XLoggerConfigurationOptions.MaxFileSizeInMB * 1024 * 1024;
+            _dateFormat = XLoggerConfigurationOptions.xLoggerFolderDateFormat;
+            _xLoggerFolderFormat = XLoggerConfigurationOptions.xLoggerFolderFormat;
             Directory.CreateDirectory(_logDirectory);
-            _logQueue = new BlockingCollection<string>(boundedCapacity: 10_000);
-            _cancellationTokenSource = new CancellationTokenSource();
-            _writerTask = Task.Run(ProcessLogQueueAsync);
+            _logQueue = new Queue<string>();
             InitializeWriter();
         }
         private void InitializeWriter()
@@ -61,21 +56,15 @@ namespace LogFusionX.FileWriter
             {
                 _streamWriter?.Dispose();
                 _fileStream?.Dispose();
-                if (_xLoggerFolderFormat == XLoggerFolderFormat.StandardLogFolderFormat)
-                {
-                    string dateFolder = DateTime.Now.ToString(_dateFormat);
-                    string folderPath = Path.Combine(_logDirectory, dateFolder);
-                    Directory.CreateDirectory(folderPath); //create folder for today if not exists
-                    string filePath = GetNextLogFilePath(folderPath);
-                    _fileStream = new FileStream(filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 8192, useAsync: true);
-                    _streamWriter = new StreamWriter(_fileStream, Encoding.UTF8) { AutoFlush = false };
-                }
-                else
-                {
-                    string filePath = GetNextLogFilePath(_logDirectory);
-                    _fileStream = new FileStream(filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 8192, useAsync: true);
-                    _streamWriter = new StreamWriter(_fileStream, Encoding.UTF8) { AutoFlush = false };
-                }
+
+                string folderPath = _xLoggerFolderFormat == XLoggerFolderFormat.StandardLogFolderFormat
+                    ? Path.Combine(_logDirectory, DateTime.Now.ToString(_dateFormat))
+                    : _logDirectory;
+
+                Directory.CreateDirectory(folderPath);
+                string filePath = GetNextLogFilePath(folderPath);
+                _fileStream = new FileStream(filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 8192);
+                _streamWriter = new StreamWriter(_fileStream, Encoding.UTF8) { AutoFlush = false };
             }
         }
         private string GetNextLogFilePath(string folderPath)
@@ -91,10 +80,25 @@ namespace LogFusionX.FileWriter
         {
             if (!string.IsNullOrWhiteSpace(logMessage))
             {
-                _logQueue.Add(logMessage);
+                lock (_logQueueLock)
+                {
+                    _logQueue.Enqueue(logMessage);
+                }
+
+                ProcessLogQueue();
             }
         }
-
+        private void ProcessLogQueue()
+        {
+            lock (_logQueueLock)
+            {
+                while (_logQueue.Count > 0)
+                {
+                    string logMessage = _logQueue.Dequeue();
+                    WriteLog(logMessage);
+                }
+            }
+        }
         /// <summary>
         /// Synchronously write a log message.
         /// </summary>
@@ -106,42 +110,11 @@ namespace LogFusionX.FileWriter
             {
                 if (_fileStream.Length >= _maxFileSizeInBytes)
                 {
-                    InitializeWriter(); // Rotate file
+                    InitializeWriter(); // Rotate file by creating a new one
                 }
 
                 _streamWriter.WriteLine(logMessage);
                 _streamWriter.Flush();
-            }
-        }
-
-        private async Task ProcessLogQueueAsync()
-        {
-            var batch = new List<string>(100);
-            try
-            {
-                while (!_cancellationTokenSource.Token.IsCancellationRequested || !_logQueue.IsCompleted)
-                {
-                    batch.Clear();
-
-                    // Collect logs into a batch
-                    while (batch.Count < 100 && _logQueue.TryTake(out string log, 100))
-                    {
-                        batch.Add(log);
-                    }
-
-                    if (batch.Count > 0)
-                    {
-                        await WriteLogsAsync(batch);
-                    }
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                // Graceful shutdown
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error processing log queue: {ex.Message}");
             }
         }
 
@@ -181,22 +154,12 @@ namespace LogFusionX.FileWriter
         {
             if (_disposed) return;
 
-            _cancellationTokenSource.Cancel();
-            _logQueue.CompleteAdding();
-
-            try
-            {
-                _writerTask.Wait(); // Ensure background task completes
-            }
-            catch (AggregateException) { } // Ignore task exceptions on dispose
-
             lock (_syncLock)
             {
                 _streamWriter?.Dispose();
                 _fileStream?.Dispose();
             }
 
-            _cancellationTokenSource.Dispose();
             _disposed = true;
         }
     }
