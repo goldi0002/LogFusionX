@@ -20,7 +20,7 @@ namespace LogFusionX.Core.Loggers
         private readonly XFileLogger? _fileLogger;
         private readonly XDBLoggerWriter? _dbLoggerWriter;
         private readonly XLoggerHelper _loggerHelper;
-        private readonly XLoggerFormats xLoggerLoggingFormat = XLoggerFormats.SimplLogFormat;
+        private readonly Configurations.XLoggerFormats xLoggerLoggingFormat = XLoggerFormats.SimplLogFormat;
 
         /// <summary>
         /// Optional custom log handler for extending logging functionality.
@@ -87,7 +87,7 @@ namespace LogFusionX.Core.Loggers
             {
                 LogFileName = fileName,
                 LogDirectory = filePath,
-                xLoggerFormat = XLoggerFormats.SimplLogFormat
+                xLoggerFormat = Configurations.XLoggerFormats.SimplLogFormat
             };
         }
         /// <summary>
