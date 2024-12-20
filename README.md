@@ -2,12 +2,6 @@
 
 LogFusionX is a powerful logging library designed to handle different log levels, formats, and logging scenarios. It provides synchronous logging capabilities, including the ability to log to files, handle exceptions, and log warning and error messages in a straightforward manner.
 
-
-### Features of LogFusionX
-- **Structured Logging**: Supports JSON formatting for structured log data.
-- **Security Focus**: Highlights suspicious or unauthorized actions in the system.
-- **Customizability**: Allows defining custom log levels and extending functionality.
-
 ## Installation
 
 To install `LogFusionX`, use the following command:
