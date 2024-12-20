@@ -5,7 +5,7 @@ using System.Text;
 
 namespace LogFusionX.Core.Configurations
 {
-    public class XFileLoggerConfigurationOptions
+    public class XLoggerConfigurationOptions
     {
         /// <summary>
         /// Minimum logger level to record.
@@ -51,8 +51,7 @@ namespace LogFusionX.Core.Configurations
         ///  true/false to enable console logging 
         /// </summary>
         public bool EnableConsoleLogging { get; set; } = false;
-
-        public XFileLoggerConfigurationOptions()
+        public XLoggerConfigurationOptions()
         {
 
         }

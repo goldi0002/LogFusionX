@@ -2,12 +2,7 @@
 using LogFusionX.Core.Utils;
 using LogFusionX.DBWriter;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Text;
-using System.Threading;
-
 
 namespace LogFusionX.Core.Loggers
 {
@@ -15,26 +10,48 @@ namespace LogFusionX.Core.Loggers
     {
         private readonly string _XLoggerFilePath;
         private readonly string _XLoggerFileName;
-        private readonly XFileLoggerConfigurationOptions? _ConfigurationOptions;
-        public XFileLogger(string filePath, string fileName) : base(filePath, fileName)
+        private readonly XLoggerConfigurationOptions? _ConfigurationOptions;
+
+        // Optimize constructor overloads to avoid redundant validation
+        public XFileLogger(string filePath, string fileName) : this(filePath, fileName, null)
+        {
+        }
+
+        public XFileLogger(string filePath, string fileName, XLoggerConfigurationOptions? XLoggerConfigurationOptions) : base(filePath, fileName, XLoggerConfigurationOptions?.MaxFileSizeInMB ?? 0)
         {
             if (string.IsNullOrEmpty(filePath)) throw new ArgumentNullException(nameof(filePath));
+
             _XLoggerFilePath = filePath;
             _XLoggerFileName = fileName;
+            _ConfigurationOptions = XLoggerConfigurationOptions;
+            ValidateLogDirectory(_XLoggerFilePath);
         }
-        public XFileLogger(string filePath, string fileName, XFileLoggerConfigurationOptions xFileLoggerConfigurationOptions) : base(filePath, fileName, xFileLoggerConfigurationOptions.MaxFileSizeInMB)
+
+        public XFileLogger(XLoggerConfigurationOptions XLoggerConfigurationOptions) : base(XLoggerConfigurationOptions)
         {
-            if (string.IsNullOrEmpty(filePath)) throw new ArgumentNullException(nameof(filePath));
-            _XLoggerFilePath = filePath;
-            _XLoggerFileName = fileName;
-            _ConfigurationOptions = xFileLoggerConfigurationOptions;
+            if (XLoggerConfigurationOptions == null || string.IsNullOrEmpty(XLoggerConfigurationOptions.LogDirectory))
+                throw new ArgumentNullException(nameof(XLoggerConfigurationOptions.LogDirectory));
+
+            _XLoggerFilePath = XLoggerConfigurationOptions.LogDirectory;
+            _XLoggerFileName = XLoggerConfigurationOptions.LogFileName;
+            _ConfigurationOptions = XLoggerConfigurationOptions;
+            ValidateLogDirectory(_XLoggerFilePath);
         }
-        public XFileLogger(XFileLoggerConfigurationOptions xFileLoggerConfigurationOptions) : base(xFileLoggerConfigurationOptions)
+
+        // Validate the log directory exists
+        private void ValidateLogDirectory(string logDirectory)
         {
-            if (string.IsNullOrEmpty(xFileLoggerConfigurationOptions.LogDirectory)) throw new ArgumentNullException(nameof(xFileLoggerConfigurationOptions.LogDirectory));
-            _XLoggerFilePath = xFileLoggerConfigurationOptions.LogDirectory;
-            _XLoggerFileName = xFileLoggerConfigurationOptions.LogFileName;
-            _ConfigurationOptions = xFileLoggerConfigurationOptions;
+            if (!Directory.Exists(logDirectory))
+            {
+                try
+                {
+                    Directory.CreateDirectory(logDirectory);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Failed to create directory {logDirectory}", ex);
+                }
+            }
         }
     }
 }

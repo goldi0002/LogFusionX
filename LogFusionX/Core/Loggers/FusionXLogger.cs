@@ -71,19 +71,19 @@ namespace LogFusionX.Core.Loggers
             _dbLoggerWriter = new XDBLoggerWriter(sqlServerConnectionString, tableName);
             _loggerHelper = new XLoggerHelper();
         }
-        public FusionXLogger(XFileLoggerConfigurationOptions xFileLoggerConfigurationOptions)
+        public FusionXLogger(XLoggerConfigurationOptions XLoggerConfigurationOptions)
         {
             _isFileLoggingEnabled = true;
-            _fileLogger = new XFileLogger(xFileLoggerConfigurationOptions);
+            _fileLogger = new XFileLogger(XLoggerConfigurationOptions);
             _loggerHelper = new XLoggerHelper();
-            xLoggerLoggingFormat = xFileLoggerConfigurationOptions.xLoggerFormat;
+            xLoggerLoggingFormat = XLoggerConfigurationOptions.xLoggerFormat;
         }
         #endregion
 
         #region Public Logging Methods
-        private XFileLoggerConfigurationOptions GetFileLoggerConfigurationOptions(string filePath, string fileName)
+        private XLoggerConfigurationOptions GetFileLoggerConfigurationOptions(string filePath, string fileName)
         {
-            return new XFileLoggerConfigurationOptions()
+            return new XLoggerConfigurationOptions()
             {
                 LogFileName = fileName,
                 LogDirectory = filePath,
@@ -133,7 +133,6 @@ namespace LogFusionX.Core.Loggers
             {
                 _fileLogger?.Log(message, exception, level, xLoggerLoggingFormat);
             }
-
             if (_isDbLoggingEnabled)
             {
                 WriteDbLog(message, exception, level);

@@ -6,7 +6,7 @@ LogFusionX is a powerful logging library designed to handle different log levels
 
 To install `LogFusionX`, use the following command:
 ```bash
-dotnet add package LogFusionX --version 0.1.3
+dotnet add package LogFusionX --version 0.1.4
 ````
 This will add the latest version of `LogFusionX` to your project.
 
@@ -27,7 +27,7 @@ class Program
     static void Main(string[] args)
     {
         // Set up the logger configuration
-        var options = new XFileLoggerConfigurationOptions
+        var options = new XLoggerConfigurationOptions
         {
             LogDirectory = Directory.GetCurrentDirectory() + "/AppData", // Log file directory
             LogFileName = "FusionLogs" // Log file name
@@ -75,7 +75,7 @@ class Program
 ## Explanation:
 
 ### Logger Configuration
-The `XFileLoggerConfigurationOptions` class is used to configure the logger in LogFusionX. Key properties include:
+The `XLoggerConfigurationOptions` class is used to configure the logger in LogFusionX. Key properties include:
 - **LogDirectory**: Specifies the directory where log files will be stored.
 - **LogFileName**: Allows you to set a custom name for the log file. Default names can follow a date-based pattern for easy organization.
 - **EnableConsoleLogging**: Enables or disables logging to the console for debugging or local development.
@@ -83,7 +83,7 @@ The `XFileLoggerConfigurationOptions` class is used to configure the logger in L
 
 Example configuration:
 ```csharp
-var config = new XFileLoggerConfigurationOptions
+var config = new XLoggerConfigurationOptions
 {
     LogDirectory = "C:\\Logs",
     LogFileName = "AppLogs.log",

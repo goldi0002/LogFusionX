@@ -1,11 +1,13 @@
 ﻿using LogFusionX.Core.Configurations;
 using LogFusionX.Core.Utils;
 using LogFusionX.FileWriter;
+using LogFusionX.StructuredLogWriter;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace LogFusionX.Core.Loggers
@@ -14,113 +16,131 @@ namespace LogFusionX.Core.Loggers
     {
         private readonly string _xLogFilePath;
         private readonly XFileLoggerWriterAdvanced _writer;
-        private readonly XLoggerFormat xLoggerFormat;
+        private readonly XLoggerFormat _xLoggerFormat;
         private readonly FusionXConsoleLogger _xConsoleLogger;
-        private readonly bool IsConsoleLoggingEnabled;
-        public XLogger(string _xFilePath, string _fileName, int MaxFileSizeInMB = 10)
+        private readonly bool _isConsoleLoggingEnabled;
+        private readonly XFusionXMLWriter _xFusionXMLWriter;
+        public XLogger(string xFilePath, string fileName, int maxFileSizeInMB = 10)
         {
-            if (string.IsNullOrWhiteSpace(_xFilePath)) throw new ArgumentNullException(nameof(_xFilePath));
-            _xLogFilePath = _xFilePath;
-            _writer = new XFileLoggerWriterAdvanced(_xLogFilePath, _fileName, MaxFileSizeInMB);
-            xLoggerFormat = new XLoggerFormat(null);
+            if (string.IsNullOrWhiteSpace(xFilePath)) throw new ArgumentNullException(nameof(xFilePath));
+
+            _xLogFilePath = xFilePath;
+            _writer = new XFileLoggerWriterAdvanced(_xLogFilePath, fileName, maxFileSizeInMB);
+            _xLoggerFormat = new XLoggerFormat();
             _xConsoleLogger = new FusionXConsoleLogger();
-            IsConsoleLoggingEnabled = false;
+            _isConsoleLoggingEnabled = false;
+            _xFusionXMLWriter = new XFusionXMLWriter(Path.Combine(xFilePath, fileName));
         }
-        public XLogger(XFileLoggerConfigurationOptions xFileLoggerConfigurationOptions)
+
+        public XLogger(XLoggerConfigurationOptions configOptions)
         {
-            if (string.IsNullOrWhiteSpace(xFileLoggerConfigurationOptions.LogDirectory)) throw new ArgumentNullException(nameof(xFileLoggerConfigurationOptions.LogDirectory));
-            _xLogFilePath = xFileLoggerConfigurationOptions.LogDirectory;
-            _writer = new XFileLoggerWriterAdvanced(xFileLoggerConfigurationOptions);
-            xLoggerFormat = new XLoggerFormat(xFileLoggerConfigurationOptions.DateFormat);
+            if (string.IsNullOrWhiteSpace(configOptions.LogDirectory)) throw new ArgumentNullException(nameof(configOptions.LogDirectory));
+
+            _xLogFilePath = configOptions.LogDirectory;
+            _writer = new XFileLoggerWriterAdvanced(configOptions);
+            _xLoggerFormat = new XLoggerFormat(configOptions.DateFormat);
             _xConsoleLogger = new FusionXConsoleLogger();
-            IsConsoleLoggingEnabled = xFileLoggerConfigurationOptions.EnableConsoleLogging;
+            _isConsoleLoggingEnabled = configOptions.EnableConsoleLogging;
+            _xFusionXMLWriter = new XFusionXMLWriter(Path.Combine(configOptions.LogDirectory, configOptions.LogFileName));
         }
-        #region "Private Members"
+
+        #region Private Methods
+
         private static string GetCurrentMethodFullName()
         {
             var stackTrace = new StackTrace();
             var frame = stackTrace.GetFrame(2);
             var method = frame?.GetMethod();
-            if (method != null)
-            {
-                var className = method.DeclaringType?.FullName;
-                var methodName = method.Name;
-                return $"{className}.{methodName}";
-            }
-            return "Unknown Method";
+            return method != null ? $"{method.DeclaringType?.FullName}.{method.Name}" : "Unknown Method";
         }
+
+        private void WriteToConsole(string message, Exception? exception, FusionXLoggerLevel level, XLoggerFormats format)
+        {
+            var logMessage = _xLoggerFormat.GetLogFormat(level, message, exception, GetCurrentMethodFullName(), format);
+            _xConsoleLogger.Log(logMessage, level);
+        }
+
+        private void WriteToFile(string message, Exception? exception, FusionXLoggerLevel level, XLoggerFormats format)
+        {
+            var logMessage = _xLoggerFormat.GetLogFormat(level, message, exception, GetCurrentMethodFullName(), format);
+            _writer.EnqueueLog(logMessage);
+        }
+
         #endregion
+
+        #region Public Methods
+
         public override void Log(string message)
         {
-            if (IsConsoleLoggingEnabled)
-                _xConsoleLogger.Log(message, FusionXLoggerLevel.Info);
-            else
-                _writer.WriteLog(message);
-        }
-
-        public override void Log(string message, Exception? exception, FusionXLoggerLevel fusionXLoggerLevel, XLoggerFormats xLogFormat)
-        {
-            if (IsConsoleLoggingEnabled)
-                commonConsoleWriter(message, exception, fusionXLoggerLevel, xLogFormat);
+            if (_isConsoleLoggingEnabled)
+            {
+                WriteToConsole(message, null, FusionXLoggerLevel.Info, XLoggerFormats.StandardLogFormat);
+            }
             else
             {
-                if (exception != null)
-                    commonWriter(message, exception, fusionXLoggerLevel, xLogFormat);
-                else
-                    Log(xLoggerFormat.GetLogFormat(FusionXLoggerLevel.None, message, null, GetCurrentMethodFullName(), xLogFormat));
+                WriteToFile(message, null, FusionXLoggerLevel.Info, XLoggerFormats.StandardLogFormat);
             }
         }
-        private void commonWriter(string message, Exception? exception, FusionXLoggerLevel fusionXLoggerLevel, XLoggerFormats xLogFormat)
+
+        public override void Log(string message, Exception? exception, FusionXLoggerLevel level, XLoggerFormats format)
         {
-            _writer.WriteLog(xLoggerFormat.GetLogFormat(fusionXLoggerLevel, message, exception, GetCurrentMethodFullName(), xLogFormat));
-        }
-        private void commonConsoleWriter(string message, Exception? exception, FusionXLoggerLevel fusionXLoggerLevel, XLoggerFormats xLogFormat)
-        {
-            _xConsoleLogger.Log(xLoggerFormat.GetLogFormat(fusionXLoggerLevel, message, exception, GetCurrentMethodFullName(), xLogFormat), fusionXLoggerLevel);
-        }
-        public override void LogCritical(string message, Exception? exception, FusionXLoggerLevel fusionXLoggerLevel, XLoggerFormats xLogFormat)
-        {
-            commonWriter(message, exception, fusionXLoggerLevel, xLogFormat);
+            if (_isConsoleLoggingEnabled)
+            {
+                WriteToConsole(message, exception, level, format);
+            }
+            else
+            {
+                WriteToFile(message, exception, level, format);
+            }
         }
 
-        public override void LogWarning(string message, Exception? exception, FusionXLoggerLevel fusionXLoggerLevel, XLoggerFormats xLogFormat)
+        public override void LogCritical(string message, Exception? exception, FusionXLoggerLevel level, XLoggerFormats format)
         {
-            commonWriter(message, exception, fusionXLoggerLevel, xLogFormat);
+            WriteToFile(message, exception, level, format);
         }
 
-        public override void LogInfo(string message, Exception? exception, FusionXLoggerLevel fusionXLoggerLevel, XLoggerFormats xLogFormat)
+        public override void LogWarning(string message, Exception? exception, FusionXLoggerLevel level, XLoggerFormats format)
         {
-            commonWriter(message, exception, fusionXLoggerLevel, xLogFormat);
+            WriteToFile(message, exception, level, format);
         }
 
-        public override void LogDebug(string message, Exception? exception, FusionXLoggerLevel fusionXLoggerLevel, XLoggerFormats xLogFormat)
+        public override void LogInfo(string message, Exception? exception, FusionXLoggerLevel level, XLoggerFormats format)
         {
-            commonWriter(message, exception, fusionXLoggerLevel, xLogFormat);
+            WriteToFile(message, exception, level, format);
         }
 
-        public override void LogPerformance(string taskName, TimeSpan timeTaken, FusionXLoggerLevel fusionXLoggerLevel, XLoggerFormats xLogFormat)
+        public override void LogDebug(string message, Exception? exception, FusionXLoggerLevel level, XLoggerFormats format)
         {
-            throw new NotImplementedException();
+            WriteToFile(message, exception, level, format);
         }
 
-        public override void LogWithTag(string tag, string message, FusionXLoggerLevel fusionXLoggerLevel, XLoggerFormats xLogFormat)
+        public override void LogPerformance(string taskName, TimeSpan timeTaken, FusionXLoggerLevel level, XLoggerFormats format)
         {
-            throw new NotImplementedException();
+            var message = $"Task '{taskName}' completed in {timeTaken.TotalMilliseconds} ms.";
+            WriteToFile(message, null, level, format);
         }
 
-        public override void LogError(string message, Exception exception, FusionXLoggerLevel fusionXLoggerLevel, XLoggerFormats xLogFormat)
+        public override void LogWithTag(string tag, string message, FusionXLoggerLevel level, XLoggerFormats format)
         {
-            commonWriter(message, exception, fusionXLoggerLevel, xLogFormat);
+            var taggedMessage = $"[{tag}] {message}";
+            WriteToFile(taggedMessage, null, level, format);
         }
 
-        public override void LogStructuredData(string message, Dictionary<string, string> data, FusionXLoggerLevel fusionXLoggerLevel)
+        public override void LogError(string message, Exception exception, FusionXLoggerLevel level, XLoggerFormats format)
         {
-            throw new NotImplementedException();
+            WriteToFile(message, exception, level, format);
         }
 
-        public override void LogStructuredData<T>(string message, List<T> data, FusionXLoggerLevel fusionXLoggerLevel)
+        public override void LogStructuredData(string message, Dictionary<string, string> data, FusionXLoggerLevel level)
         {
-            throw new NotImplementedException();
+            _xFusionXMLWriter.Write(data);
         }
+
+        public override void LogStructuredData<T>(string message, List<T> data, FusionXLoggerLevel level)
+        {
+            _xFusionXMLWriter.Write(data);
+        }
+
+        #endregion
     }
 }
