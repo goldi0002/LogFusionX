@@ -47,6 +47,11 @@ namespace LogFusionX.Core.Configurations
         public XLoggerFolderFormat xLoggerFolderFormat { get; set; }
         public string xLoggerFolderDateFormat { get; set; } = "yyyy-MM-dd";
 
+        /// <summary>
+        ///  true/false to enable console logging 
+        /// </summary>
+        public bool EnableConsoleLogging { get; set; } = false;
+
         public XFileLoggerConfigurationOptions()
         {
 
